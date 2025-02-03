@@ -1,0 +1,13 @@
+modbus_polling_node:
+  serviceNamespace: modbusPolling/drive
+  deviceName: /dev/serial/by-id/usb-MOVEROBOTIC_MRC_MDC24V10A002T_CDC_in_FS_Mode_375539583532-if00
+  baudRate: 115200
+  parity: N
+  startBit: 8
+  stopBit: 1
+  timeout: 0.1
+  maxChuckSize: 16
+center:
+  mrc_mdc24v10a002t_driver2_node:
+    serviceNamespace: modbusPolling/drive
+    modbusId: 1

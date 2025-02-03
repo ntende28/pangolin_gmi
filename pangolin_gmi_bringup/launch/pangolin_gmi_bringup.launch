@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+
+<launch>
+	<arg name="joy_config" default="joy.yaml"/>
+	<arg name="teleop_twist_config" default="teleop_twist.yaml"/>
+	<arg name="twist_mux_config" default="twist_mux.yaml"/>
+	<arg name="controller_config" default="controller.yaml"/>
+	<arg name="odometry_config" default="odometry.yaml"/>
+	<arg name="interface_config" default="interface.yaml"/>
+	<arg name="drive_config" default="drive.yaml"/>
+	<arg name="magnetic_line_config" default="magnetic_line.yaml"/>
+	<arg name="imu_config" default="imu.yaml"/>
+	<arg name="lidar_config" default="lidar.yaml"/>
+	<arg name="utility_config" default="utility.yaml"/>
+	<arg name="safety_config" default="safety.yaml"/>
+
+	<arg name="joint_state_enable" default="true"/>
+	<arg name="joint_state_gui_enable" default="false"/>
+
+	<include file="$(find pangolin_gmi_control)/launch/pangolin_gmi_control.launch">
+		<arg name="joy_config" value="$(arg joy_config)"/>
+		<arg name="teleop_twist_config" value="$(arg teleop_twist_config)"/>
+		<arg name="twist_mux_config" value="$(arg twist_mux_config)"/>
+	</include>
+
+	<include file="$(find pangolin_gmi_description)/launch/pangolin_gmi_description.launch">
+		<arg name="joint_state_enable" value="$(arg joint_state_enable)"/>
+		<arg name="joint_state_gui_enable" value="$(arg joint_state_gui_enable)"/>
+	</include>
+	
+	<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg controller_config)"/>
+	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="true" output="screen"
+		args="state_controller diff_controller">
+	</node>
+
+    ###PACKAGE TO PROVIDE FILTERED ODOMETRY###
+	<node name="ekf_localization_odom" pkg="robot_localization" type="ekf_localization_node" respawn="true">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg odometry_config)"/>
+		<remap from="odometry/filtered" to="/diff_controller/odom_filtered" />
+	</node>
+
+	<node name="pangolin_gmi_interface_node" pkg="pangolin_gmi_interface" type="pangolin_gmi_interface_node" respawn="true" output="screen">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg interface_config)"/>
+		<remap from="leftWheelDesire" to="/drive/left/targetSpeed" />
+		<remap from="leftWheelFeedback" to="/drive/left/actualSpeed" />
+		<remap from="rightWheelDesire" to="/drive/right/targetSpeed" />
+		<remap from="rightWheelFeedback" to="/drive/right/actualSpeed" />
+	</node>
+
+	<group ns="drive">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg drive_config)"/>
+		<node name="modbus_polling_node" pkg="modbus_polling" type="modbus_polling_node" output="screen">
+		</node>
+		<group ns="center">
+			<node name="mrc_mdc24v10a002t_driver2_node" pkg="mrc_mdc24v10a002t_driver" type="mrc_mdc24v10a002t_driver2_node" output="screen">
+				<remap from="command/1" to="/drive/left/targetSpeed" />
+				<remap from="command/0" to="/drive/right/targetSpeed" />
+				<remap from="encoder/velocity/1" to="/drive/left/actualSpeed" />
+				<remap from="encoder/velocity/0" to="/drive/right/actualSpeed" />
+				<remap from="ready/1" to="/drive/left/ready" />
+				<remap from="ready/0" to="/drive/right/ready" />
+				<remap from="enable/1" to="/safety/enable" />
+				<remap from="enable/0" to="/safety/enable" />
+				<remap from="diState/1" to="/e_stop"/>
+				<remap from="diState/0" to="/bumper_stop"/>
+				<remap from="doState/3" to="/lifter"/>
+				<remap from="doState/2" to="/led/blue"/>
+				<remap from="doState/1" to="/led/red"/>
+				<remap from="doState/0" to="/led/green"/>
+			</node>
+		</group>
+	</group>
+
+    ###NODE TO RUN LIDAR DRIVER###
+	<group ns="lidar">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg lidar_config)"/>
+		<group ns="center">
+			<node name="rslidar_sdk_node" pkg="rslidar_sdk" type="rslidar_sdk_node" output="screen">
+				<param name="config_path" value=""/>
+				<remap from="/rslidar_points" to="cloud"/>
+			</node>
+
+			<node name="obstacle_crop_box" pkg="nodelet" type="nodelet" args="standalone pcl/CropBox">
+				<!-- <remap from="~input" to="shadow" /> -->
+				<remap from="~input" to="cloud" />
+				<remap from="~output" to="obstacle_crop_box" />
+			</node>
+			<node name="obstacle_voxel_grid" pkg="nodelet" type="nodelet" args="standalone pcl/VoxelGrid">
+				<remap from="~input" to="obstacle_crop_box" />
+				<remap from="~output" to="obstacle_cloud_filtered" />
+			</node>
+
+			<node name="slam_crop_box" pkg="nodelet" type="nodelet" args="standalone pcl/CropBox">
+				<remap from="~input" to="cloud" />
+				<remap from="~output" to="slam_crop_box" />
+			</node>
+			<node name="slam_voxel_grid" pkg="nodelet" type="nodelet" args="standalone pcl/VoxelGrid">
+				<remap from="~input" to="slam_crop_box" />
+				<remap from="~output" to="slam_cloud_filtered" />
+			</node>
+		</group>
+	</group>
+
+	###NODE TO RUN MAGNETIC_LINE DRIVER###
+	<group ns="magnetic_line">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg magnetic_line_config)"/>
+		<group ns="center">
+			<node name="roboteq_track_node" pkg="roboteq_track" type="roboteq_track_node" output="screen" respawn="false">
+			</node>
+		</group>
+	</group>
+
+    ###NODE TO RUN IMU DRIVER###
+	<group ns="imu">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg imu_config)"/>
+		<node name="modbus_polling_node" pkg="modbus_polling" type="modbus_polling_node" output="screen">
+		</node>
+		<group ns="center">
+			<node name="mrc_imu9d001t_driver2_node" pkg="mrc_imu9d001t_driver" type="mrc_imu9d001t_driver2_node" output="screen">
+				<remap from="imu/data" to="data"/>
+			</node>
+			<node name="imu_transformer_node" pkg="imu_transformer" type="imu_transformer_node" output="screen">
+				<remap from="imu_in/data" to="safe"/>
+				<remap from="imu_out/data" to="oriented"/>
+			</node>
+		</group>
+	</group>
+
+    
+	<group ns="utility">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg utility_config)"/>
+		<group ns="bms">
+			<node name="cyclen_bms_node" pkg="cyclen_bms" type="cyclen_bms_node" output="screen">
+			</node>
+		</group>
+		<group ns="sound">
+			<node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" respawn="true" output="screen">
+			</node>
+		</group>
+		<group ns="rfid">
+			<node name="cph_driver_node" pkg="cph_driver" type="cph_driver_node" output="screen">
+			</node>
+		</group>
+	</group>
+
+	<group ns="safety">
+		<rosparam command="load" file="$(find pangolin_gmi_bringup)/cfg/$(arg safety_config)"/>
+		<node name="safety_costmap_node" pkg="safety_costmap" type="safety_costmap_node" output="screen">
+			<remap from="cloud0" to="/lidar/center/obstacle_cloud_filtered"/>
+			<remap from="cmd_vel_in" to="/cmd_vel_out"/>
+			<remap from="cmd_vel" to="/diff_controller/cmd_vel"/>
+			<remap from="enable" to="costmap/enable"/>
+		</node>
+
+		<node name="safety_hardware_node" pkg="safety_hardware" type="safety_hardware_node" output="screen">
+			<remap from="device0" to="/e_stop"/>
+			<remap from="device1" to="/bumper_stop"/>
+			<remap from="device2" to="/drive/right/targetSpeed"/>
+			<remap from="device3" to="/drive/right/actualSpeed"/>
+			<remap from="device4" to="/drive/left/targetSpeed"/>
+			<remap from="device5" to="/drive/left/actualSpeed"/>
+			<remap from="device6" to="/imu/center/data"/>
+			<remap from="device7" to="/diff_controller/odom"/>
+			<remap from="device8" to="/utility/bms/bms"/>
+			<remap from="device9" to="/lidar/center/obstacle_cloud_filtered"/>
+			<remap from="device10" to="/lidar/center/slam_cloud_filtered"/>
+			
+			<remap from="error0" to="error/e_stop"/>
+			<remap from="error1" to="error/bumper_stop"/>
+			<remap from="error2" to="error/drive/right/targetSpeed"/>
+			<remap from="error3" to="error/drive/right/actualSpeed"/>
+			<remap from="error4" to="error/drive/left/targetSpeed"/>
+			<remap from="error5" to="error/drive/left/actualSpeed"/>
+			<remap from="error6" to="error/imu/center/data"/>
+			<remap from="error7" to="error/diff_controller/odom"/>
+			<remap from="error8" to="error/utility/bms/bms"/>
+			<remap from="error9" to="error/lidar/center/obstacle_cloud_filtered"/>
+			<remap from="error10" to="error/lidar/center/slam_cloud_filtered"/>
+
+			<remap from="error" to="/error_stop"/>
+		</node>
+
+		<node name="safety_sensor_node" pkg="safety_sensor" type="safety_sensor_node" output="screen">
+			<param name="imuTimeout" value="0.1"/>
+			<param name="odomTimeout" value="0.1"/>
+			<remap from="imuInput" to="/imu/center/data"/>
+			<remap from="imuOutput" to="/imu/center/safe"/>
+			<remap from="odomInput" to="/diff_controller/odom"/>
+			<remap from="odomOutput" to="/diff_controller/odom_safe"/>
+		</node>
+
+		<node name="error_manager_node" pkg="error_manager" type="error_manager_node" output="screen">
+		</node>
+	</group>
+
+	<node name="initilizing_node" pkg="rostopic" type="rostopic" args="pub -1 /led/blue std_msgs/Bool 'data: true'" output="screen">
+	</node>
+
+	<node name="initilizing2_node" pkg="rostopic" type="rostopic" args="pub -1 /safety/costmap/enable std_msgs/Bool 'data: false'" output="screen">
+	</node>
+
+	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+	</include>
+
+</launch>

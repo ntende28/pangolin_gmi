@@ -1,0 +1,5 @@
+wheelLeftDirection: true
+encoderLeftDirection: true
+wheelRightDirection: false
+encoderRightDirection: false
+timeout: 0.4

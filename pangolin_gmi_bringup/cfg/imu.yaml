@@ -1,0 +1,17 @@
+modbus_polling_node:
+  serviceNamespace: modbusPolling/imu
+  deviceName: /dev/serial/by-id/usb-STMicroelectronics_GENERIC_F411CEUX_CDC_in_FS_Mode_3058395A3230-if00
+  baudRate: 115200
+  parity: N
+  startBit: 8
+  stopBit: 1
+  timeout: 0.1
+  maxChuckSize: 16
+center:
+  mrc_imu9d001t_driver2_node: 
+    serviceNamespace: modbusPolling/imu
+    modbusId: 1
+    imuFrameId: imu_link
+    magneticFieldFrameId: magnetic_field_link
+  imu_transformer_node:
+    target_frame: base_footprint

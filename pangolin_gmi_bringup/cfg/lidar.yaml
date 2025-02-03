@@ -1,0 +1,27 @@
+center:
+  rslidar_sdk_node:
+    config_path: ""
+  obstacle_crop_box:
+    min_x: -0.5
+    max_x: 0.5
+    min_y: -0.5
+    max_y: 0.5
+    min_z: -0.1
+    max_z: 0.80
+    negative: true
+    input_frame: base_footprint
+    output_frame: ''
+  obstacle_voxel_grid:
+    leaf_size: 0.05
+  slam_crop_box:
+    min_x: -0.50
+    max_x: 0.50
+    min_y: -0.5
+    max_y: 0.5
+    min_z: -0.1
+    max_z: 0.80
+    negative: true
+    input_frame: base_footprint
+    output_frame: ''
+  slam_voxel_grid:
+    leaf_size: 0.05

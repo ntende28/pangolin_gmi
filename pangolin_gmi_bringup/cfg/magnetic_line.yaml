@@ -1,0 +1,20 @@
+center:
+  roboteq_track_node:
+    port: "/dev/serial/by-id/usb-Roboteq_Magnetic_Sensor_48E7745A3132-if00"
+    baud: 115200
+    frequency: 100
+    querys:
+      # B: "user_boolean_variable"
+      # MGD: "track_detect"
+      # MGM: "markers"
+      # MZ: "internal_sensor_values"
+      # T: "selected_track"
+      MGT: "leftRightSelectedTrack"
+      # VAR: "user_integer_variable"
+      # GY: "gyroscope"
+      MGS: "magsensorStatus"
+      # MGX: "tape_cross_detection"
+      ANG: "integratedAngle"
+    commands:
+      TX: "left_track"
+      TV: "right_track"

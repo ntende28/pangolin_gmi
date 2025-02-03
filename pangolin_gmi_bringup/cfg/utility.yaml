@@ -1,0 +1,7 @@
+bms:
+  cyclen_bms_node:
+    deviceName: /dev/serial/by-id/usb-WCH.CN_USB_Quad_Serial_BC0AD9ABCD-if00
+  rfid:
+    deviceName: /dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
+    delayDetect: 1.0
+    delayUndetect: 1.0
