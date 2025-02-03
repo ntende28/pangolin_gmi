@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+
+<robot name="camera" xmlns:xacro="http://wiki.ros.org/xacro">
+
+	<xacro:macro name="camera" params="object_name:='camera' parent_link:='base_link' xyz:='0 0 0' rpy:='0 0 0' topic='camera'">
+
+		<xacro:property
+			name="M_PI"
+			value="3.1415926536"/>
+		
+
+		<link
+			name="${object_name}">
+			<inertial>
+				<origin
+					xyz="0 0 0"
+					rpy="${90*M_PI/180} ${0*M_PI/180} ${90*M_PI/180}"/>
+				<mass
+					value="0.072"/>
+				<inertia
+					ixx="0.003881243"
+					iyy="0.000498940"
+					izz="0.003879257"
+					ixy="0.0"
+					ixz="0.0"
+					iyz="0.0"/>
+			</inertial>
+			<visual>
+				<origin
+					xyz="0 0 0"
+					rpy="${90*M_PI/180} ${0*M_PI/180} ${90*M_PI/180}"/>
+				<geometry>
+					<mesh
+						filename="package://pangolin_gmi_description/meshes/realsense_d455.STL"
+						scale="0.001 0.001 0.001"/>
+				</geometry>
+				<material
+					name="${object_name}_mount_material">
+					<color
+						rgba="0 0 1 1"/>
+					<texture
+						filename=""/>
+				</material>
+			</visual>
+			<collision>
+				<origin
+					xyz="0 0 0"
+					rpy="${90*M_PI/180} ${0*M_PI/180} ${90*M_PI/180}"/>
+				<geometry>
+					<mesh
+						filename="package://pangolin_gmi_description/meshes/realsense_d455.STL"
+						scale="0.001 0.001 0.001"/>
+				</geometry>
+			</collision>
+		</link>
+
+		<joint
+			name="${object_name}_joint"
+			type="fixed">
+			<origin
+				xyz="${xyz}"
+				rpy="${rpy}"/>
+			<parent
+				link="${parent_link}"/>
+			<child
+				link="${object_name}"/>
+		</joint>
+
+		<gazebo reference="${object_name}">
+			<material>Gazebo/Blue</material>
+			<gravity>true</gravity>
+			<kp>100000.0</kp>
+			<kd>10000.0</kd>
+			<mu1>0.8</mu1>
+			<mu2>0.8</mu2>
+			<maxVel>0.0</maxVel>
+			<minDepth>0.001</minDepth>
+			<sensor name="${object_name}_sensor" type="camera">
+				<update_rate>30.0</update_rate>
+				<camera name="head">
+				<horizontal_fov>1.3962634</horizontal_fov>
+				<image>
+					<width>800</width>
+					<height>800</height>
+					<format>R8G8B8</format>
+				</image>
+				<clip>
+					<near>0.02</near>
+					<far>300</far>
+				</clip>
+				<noise>
+					<type>gaussian</type>
+					<!-- Noise is sampled independently per pixel on each frame.
+						 That pixel's noise value is added to each of its color
+						 channels, which at that point lie in the range [0,1]. -->
+					<mean>0.0</mean>
+					<stddev>0.007</stddev>
+				</noise>
+				</camera>
+				<plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+				<alwaysOn>true</alwaysOn>
+				<updateRate>0.0</updateRate>
+				<cameraName>${topic}</cameraName>
+				<imageTopicName>image_raw</imageTopicName>
+				<cameraInfoTopicName>camera_info</cameraInfoTopicName>
+				<frameName>${object_name}</frameName>
+				<hackBaseline>0.07</hackBaseline>
+				<distortionK1>0.0</distortionK1>
+				<distortionK2>0.0</distortionK2>
+				<distortionK3>0.0</distortionK3>
+				<distortionT1>0.0</distortionT1>
+				<distortionT2>0.0</distortionT2>
+				</plugin>
+			</sensor>
+		</gazebo>
+	</xacro:macro>
+</robot>

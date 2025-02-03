@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+
+<robot name="base" xmlns:xacro="http://wiki.ros.org/xacro">
+	<xacro:macro name="base" params="object_name:='base_link' parent_link:='base_footprint' xyz:='0 0 0' rpy:='0 0 0'">
+		<xacro:property
+			name="mass"
+			value="30"/>
+		<xacro:property
+			name="x"
+			value="1.1"/>
+		<xacro:property
+			name="y"
+			value="0.8"/>
+		<xacro:property
+			name="z"
+			value="0.5"/>
+		<xacro:property
+			name="M_PI"
+			value="3.1415926536"/>
+	
+		
+		<link
+			name="${object_name}">
+			<inertial>
+				<origin
+					xyz="0 0 0"
+					rpy="0 0 0"/>
+				<mass
+					value="${mass}"/>
+				<inertia
+					ixx="${(y * y + z * z) / 12.0}"
+					iyy="${(x * x + z * z) / 12.0}"
+					izz="${(x * x + y * y) / 12.0}"
+					ixy="0.0"
+					ixz="0.0"
+					iyz="0.0"/>
+			</inertial>
+			<visual>
+				<origin
+					xyz="0 0 0"
+					rpy="0 0 0"/>
+				<geometry>
+					<mesh
+						filename="package://pangolin_gmi_description/meshes/base_link.STL"
+						scale="1 1 1"/>
+				</geometry>
+				<material
+					name="${object_name}_material">
+					<color
+						rgba="1 1 1 1"/>
+					<texture
+						filename=""/>
+				</material>
+			</visual>
+			<collision>
+				<origin
+					xyz="0 0 0"
+					rpy="0 0 0"/>
+				<geometry>
+					<mesh
+						filename="package://pangolin_gmi_description/meshes/base_link.STL"
+						scale="1 1 1"/>
+				</geometry>
+			</collision>
+		</link>
+
+		<joint
+			name="${object_name}_joint"
+			type="fixed">
+			<origin
+				xyz="${xyz}"
+				rpy="${rpy}"/>
+			<parent
+				link="${parent_link}"/>
+			<child
+				link="${object_name}"/>
+		</joint>
+
+		<gazebo reference="${object_name}_wheel_link">
+			<material>Gazebo/White</material>
+			<gravity>true</gravity>
+			<kp>100000.0</kp>
+			<kd>10000.0</kd>
+			<mu1>0.8</mu1>
+			<mu2>0.8</mu2>
+			<maxVel>0.0</maxVel>
+			<minDepth>0.001</minDepth>
+		</gazebo>
+
+	</xacro:macro>
+</robot>

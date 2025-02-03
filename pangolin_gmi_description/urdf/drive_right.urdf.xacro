@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+
+<robot name="drive_right" xmlns:xacro="http://wiki.ros.org/xacro">
+	
+	<xacro:macro name="drive_right" params="object_name:='drive_right' parent_link:='base_link' xyz:='0 0 0' rpy:='0 0 0'">
+		<xacro:property
+			name="mass"
+			value="2"/>
+		<xacro:property
+			name="ri"
+			value="0.06"/>
+		<xacro:property
+			name="ro"
+			value="0.07"/>
+		<xacro:property
+			name="h"
+			value="0.03"/>
+		<xacro:property
+			name="M_PI"
+			value="3.1415926536"/>
+		
+		<link
+			name="${object_name}_link">
+			<inertial>
+				<origin
+					xyz="0 0 0"
+					rpy="0 0 0"/>
+				<mass
+					value="${mass}"/>
+				<inertia
+					ixx="${(3 * (ro * ro + ri * ri) + h * h) / 12.0}"
+					iyy="${(3 * (ro * ro + ri * ri) + h * h) / 12.0}"
+					izz="${(ro * ro + ri * ri) / 2.0}"
+					ixy="0.0"
+					ixz="0.0"
+					iyz="0.0"/>
+			</inertial>
+			<visual>
+				<origin
+					xyz="0 0 0"
+					rpy="0 0 0"/>
+				<geometry>
+					<cylinder
+						radius="${ro}"
+						length="${h}"/>
+				</geometry>
+				<material
+					name="${object_name}_material">
+					<color
+						rgba="0 0 0 1"/>
+					<texture
+						filename=""/>
+				</material>
+			</visual>
+			<collision>
+				<origin
+					xyz="0 0 0"
+					rpy="0 0 0"/>
+				<geometry>
+					<cylinder
+						radius="${ro}"
+						length="${h}"/>
+				</geometry>
+			</collision>
+		</link>
+
+		<joint
+			name="${object_name}_joint"
+			type="continuous">
+			<origin
+				xyz="${xyz}"
+				rpy="${rpy}"/>
+			<parent
+				link="${parent_link}"/>
+			<child
+				link="${object_name}_link"/>
+			<axis
+				xyz="0 0 1"/>
+		</joint>
+
+		<transmission
+			name="${object_name}_trans"
+			type="SimpleTransmission">
+			<type>
+				transmission_interface/SimpleTransmission
+			</type>
+			<joint
+				name="${object_name}_joint">
+				<hardwareInterface>
+					hardware_interface/VelocityJointInterface
+				</hardwareInterface>
+			</joint>
+			<actuator
+				name="${object_name}_actuator">
+				<mechanicalReduction>
+					1
+				</mechanicalReduction>
+			</actuator>
+		</transmission>
+
+		<gazebo reference="${object_name}_link">
+			<material>Gazebo/Black</material>
+			<kp>100000.0</kp>
+			<kd>10000.0</kd>
+			<mu1>1.0</mu1>
+			<mu2>1.0</mu2>
+		</gazebo>
+
+	</xacro:macro>
+</robot>

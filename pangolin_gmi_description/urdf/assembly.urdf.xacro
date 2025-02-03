@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+
+<robot name="pangolin_mini" xmlns:xacro="http://wiki.ros.org/xacro">
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/base.urdf.xacro" />
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/drive_left.urdf.xacro" />
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/drive_right.urdf.xacro" />
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/wheelcastor.urdf.xacro" />
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/castor.urdf.xacro" />
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/imu.urdf.xacro" />
+	<xacro:include filename="$(find pangolin_gmi_description)/urdf/robosense.urdf.xacro" />
+
+
+	<xacro:property name="M_PI" value="3.1415926536"/>
+
+	<!-- link -->
+	<!-- base footprint -->
+	<link
+		name="base_footprint"/>
+
+	<!-- chassis -->
+	<xacro:base
+		object_name="base"
+		parent_link="base_footprint"
+		xyz="0 0 0.05"
+		rpy="0 0 0"/>
+
+	<!-- drive right -->
+	<xacro:drive_right
+		object_name="drive_right"
+		parent_link="base_link"
+		xyz="0.02 -0.23 -0.0050"
+		rpy="${-90*M_PI/180} 0 0"/>
+
+	<!-- drive left -->
+	<xacro:drive_left
+		object_name="drive_left"
+		parent_link="base_link"
+		xyz="0.02 0.23 -0.0050"
+		rpy="${-90*M_PI/180} 0 0"/>
+
+<!-- right front castor -->
+	<xacro:castor
+		parent_link="base_link"
+		object_name="rightfront_castor_rod"
+		xyz="0.285 -0.175 0.065"
+		rpy="0 0 ${M_PI}"/>
+
+	<xacro:wheelcastor
+		parent_link="rightfront_castor_rod_link"
+		object_name="rightfront_castor_wheel"
+		xyz="${0.05} 0 ${-0.09}"
+		rpy="0 0 0"/>
+
+	<!-- left front castor -->
+	<xacro:castor
+		parent_link="base_link"
+		object_name="leftfront_castor_rod"
+		xyz="0.285 0.175 0.065"
+		rpy="0 0 ${M_PI}"/>
+
+	<xacro:wheelcastor
+		parent_link="leftfront_castor_rod_link"
+		object_name="leftfront_castor_wheel"
+		xyz="${0.05} 0 ${-0.09}"
+		rpy="0 0 0"/>
+
+	<!-- right rear castor -->
+	<xacro:castor
+		parent_link="base_link"
+		object_name="rightrear_castor_rod"
+		xyz="-0.245 -0.175 0.065"
+		rpy="0 0 ${M_PI}"/>
+
+	<xacro:wheelcastor
+		parent_link="rightrear_castor_rod_link"
+		object_name="rightrear_castor_wheel"
+		xyz="${0.05} 0 ${-0.09}"
+		rpy="0 0 0"/>
+
+	<!-- left rear castor -->
+	<xacro:castor
+		parent_link="base_link"
+		object_name="leftrear_castor_rod"
+		xyz="-0.245 0.175 0.065"
+		rpy="0 0 ${M_PI}"/>
+
+	<xacro:wheelcastor
+		parent_link="leftrear_castor_rod_link"
+		object_name="leftrear_castor_wheel"
+		xyz="${0.05} 0 ${-0.09}"
+		rpy="0 0 0"/>
+
+	<!-- imu -->
+	<xacro:imu
+		object_name="imu"
+		topic="imu/center/data"
+		parent_link="base_link"
+		xyz="0 0 0.25"
+		rpy="0 0 0"/>
+
+	<!-- lidar -->
+	<xacro:robosense
+		object_name="robosense"
+		topic="lidar/center/scan"
+		frame_link="robosense_link"
+		parent_link="base_link"
+		xyz="0.024 0 0.44"
+		rpy="0 0 0"/>
+
+	<!-- camera right-->
+	<!-- <xacro:camera
+		object_name="camera_right_link"
+		parent_link="base_link"
+		xyz="0.15323 -0.075939 0.29"
+		rpy="${180*M_PI/180} 0 0.3927"
+		topic="camera"/> -->
+	<!-- <xacro:realsense_d455
+		object_name="camera_right"
+		topic="camera/right"
+		parent_link="base_link"
+		xyz="0.15323 -0.075939 0.29"
+		rpy="${180*M_PI/180} 0 0.3927"/> -->
+
+	<!-- camera left-->
+	<!-- <xacro:camera
+		object_name="camera_left_link"
+		parent_link="base_link"
+		xyz="0.15323 0.075939 0.29"
+		rpy="0 0 -0.3927"
+		topic="camera"/> -->
+<!-- 	<xacro:realsense_d455
+		object_name="camera_left"
+		topic="camera/left"
+		parent_link="base_link"
+		xyz="0.15323 0.075939 0.29"
+		rpy="0 0 -0.3927"/> -->
+
+	<gazebo>
+		<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+			<legacyModeNS>true</legacyModeNS>
+		</plugin>
+	</gazebo>
+
+</robot>
