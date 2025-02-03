@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<launch>
+	<arg name="joy_config" default="joy.yaml"/>
+	<arg name="teleop_twist_config" default="teleop_twist.yaml"/>
+	<arg name="twist_mux_config" default="twist_mux.yaml"/>
+
+	<node pkg="joy" type="joy_node" name="joy_node" respawn="true">
+		<rosparam command="load" file="$(find pangolin_gmi_control)/cfg/$(arg joy_config)" />
+	</node>
+
+	<node name="teleop_twist" pkg="teleop_twist_joy" type="teleop_node" respawn="true">
+		<rosparam command="load" file="$(find pangolin_gmi_control)/cfg/$(arg teleop_twist_config)" />
+		<remap from="cmd_vel" to="joy_teleop/cmd_vel"/>
+	</node>
+
+	<node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" respawn="true">
+		<remap from="cmd_vel" to="keyboard_teleop/cmd_vel"/>
+	</node>
+
+	<node name="twist_mux" pkg="twist_mux" type="twist_mux" respawn="true">
+		<rosparam command="load"  file="$(find pangolin_gmi_control)/cfg/$(arg twist_mux_config)"/>
+		<remap from="cmd_vel_out" to="/diff_controller/cmd_vel"/>
+	</node>
+	
+</launch>

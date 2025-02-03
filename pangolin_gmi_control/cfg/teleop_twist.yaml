@@ -1,0 +1,8 @@
+axis_linear: 1 # linear X button map
+scale_linear: 0.75 # linear X scale
+scale_linear_turbo: 1.0 # linear X turbo scale
+axis_angular: 3 # angular Z button map
+scale_angular: 0.75 # angular Z scale
+scale_angular_turbo: 1.0 # angular Z turbo scale
+enable_button: 4 # enable button map
+enable_turbo_button: 5 # turbo button map

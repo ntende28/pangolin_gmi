@@ -1,0 +1,30 @@
+topics:
+- name    : joy
+  topic   : joy_teleop/cmd_vel
+  timeout : 0.5
+  priority: 8
+- name    : keyboard
+  topic   : keyboard_teleop/cmd_vel
+  timeout : 0.5
+  priority: 4
+- name    : rqt
+  topic   : rqt_teleop/cmd_vel
+  timeout : 0.5
+  priority: 2
+- name    : navigation
+  topic   : navigation/cmd_vel
+  timeout : 0.5
+  priority: 1
+locks:
+- name    : emergency
+  topic   : e_stop
+  timeout : 0.0
+  priority: 255
+- name    : error
+  topic   : error_stop
+  timeout : 0.0
+  priority: 255
+- name    : bumper
+  topic   : bumper_stop
+  timeout : 0.0
+  priority: 255
