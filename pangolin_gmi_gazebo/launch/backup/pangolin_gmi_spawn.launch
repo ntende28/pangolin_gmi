@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<launch>
+	<arg name="joy_config" default="joy.yaml"/>
+	<arg name="teleop_twist_config" default="teleop_twist.yaml"/>
+	<arg name="twist_mux_config" default="twist_mux.yaml"/>
+	<arg name="controller_config" default="controller.yaml"/>
+	<arg name="x" default="0.0"/>
+	<arg name="y" default="0.0"/>
+	<arg name="z" default="0.0"/> 
+	<arg name="yaw" default="0.0"/>
+
+	<include file="$(find pangolin_gmi_control)/launch/pangolin_gmi_control.launch">
+		<arg name="joy_config" value="$(arg joy_config)"/>
+		<arg name="teleop_twist_config" default="$(arg teleop_twist_config)"/>
+		<arg name="twist_mux_config" default="$(arg twist_mux_config)"/>
+	</include>
+
+	<include file="$(find pangolin_gmi_description)/launch/pangolin_gmi_description.launch">
+		<arg name="joint_state_enable" default="false"/>
+		<arg name="joint_state_gui_enable" default="false"/>
+	</include>
+
+	<node name="spawn_model_node" pkg="gazebo_ros" type="spawn_model"
+		args="-x $(arg x)
+					-y $(arg y)
+					-z $(arg z)
+					-Y $(arg yaw)
+					-urdf
+					-param robot_description
+					-model pangolin/"/>
+
+	<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg controller_config)"/>
+
+	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+		args="state_controller diff_controller">
+	</node>
+
+</launch>

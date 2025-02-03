@@ -1,0 +1,17 @@
+safety_costmap_node:
+  vertices:
+    [[0.55, 0.325, 0.0], [-0.5, 0.325, 0.0], [-0.5, -0.325, 0.0], [0.55, -0.325, 0.0], [0.55, 0.325, 0.7], [-0.5, 0.325, 0.7], [-0.5, -0.325, 0.7], [0.55, -0.325, 0.7]]
+  cloud_num: 1
+  voxel: 0.05
+  base_frame: base_footprint
+safety_hardware_node:
+  deviceNum: 4
+  deviceTimeout0: 0.2 #/imu/center/data
+  deviceTimeout1: 0.2 #/diff_controller/odom
+  deviceTimeout2: 0.2 #/lidar/center/obstacle_cloud_filtered
+  deviceTimeout3: 0.2 #/lidar/center/slam_cloud_filtered
+error_manager_node:
+  timeout: 0.5
+  source_list:
+    - "/drive/left/ready"
+    - "/drive/right/ready"

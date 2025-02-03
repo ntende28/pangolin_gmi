@@ -1,0 +1,3 @@
+center:
+  imu_transformer_node:
+    target_frame: base_footprint

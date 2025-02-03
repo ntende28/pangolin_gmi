@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+
+<launch>
+	<arg name="world_name" default="$(find pangolin_gmi_gazebo)/worlds/mrworld_adr_obstacle.world"/>
+	<arg name="x" default="0.0"/>
+	<arg name="y" default="0.0"/>
+	<arg name="z" default="0.0"/> 
+	<arg name="yaw" default="0.0"/>
+
+	<arg name="joy_config" default="joy.yaml"/>
+	<arg name="teleop_twist_config" default="teleop_twist.yaml"/>
+	<arg name="twist_mux_config" default="twist_mux.yaml"/>
+	<arg name="controller_config" default="controller.yaml"/>
+	<arg name="odometry_config" default="odometry.yaml"/>
+	<arg name="interface_config" default="interface.yaml"/>
+	<arg name="drive_config" default="drive.yaml"/>
+	<arg name="imu_config" default="imu.yaml"/>
+	<arg name="lidar_config" default="lidar.yaml"/>
+	<arg name="utility_config" default="utility.yaml"/>
+	<arg name="safety_config" default="safety.yaml"/>
+
+	<arg name="joint_state_enable" default="true"/>
+	<arg name="joint_state_gui_enable" default="false"/>
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(arg world_name)"/>
+		<arg name="paused" value="false"/>
+		<arg name="use_sim_time" value="true"/>
+		<arg name="gui" value="true"/> 
+		<arg name="headless" value="false"/>
+		<arg name="debug" value="false"/>
+		<!-- <arg name="use_clock_frequency" value="true"/> -->
+		<!-- <arg name="pub_clock_frequency" value="50"/> -->
+	</include>
+
+	<node name="spawn_model_node" pkg="gazebo_ros" type="spawn_model"
+		args="-x $(arg x)
+			  -y $(arg y)
+			  -z $(arg z)
+			  -Y $(arg yaw)
+			  -urdf
+			  -param robot_description
+			  -model pangolin_gmi">
+	</node>
+
+	<include file="$(find pangolin_gmi_control)/launch/pangolin_gmi_control.launch">
+		<arg name="joy_config" value="$(arg joy_config)"/>
+		<arg name="teleop_twist_config" value="$(arg teleop_twist_config)"/>
+		<arg name="twist_mux_config" value="$(arg twist_mux_config)"/>
+	</include>
+
+	<include file="$(find pangolin_gmi_description)/launch/pangolin_gmi_description.launch">
+		<arg name="joint_state_enable" value="$(arg joint_state_enable)"/>
+		<arg name="joint_state_gui_enable" value="$(arg joint_state_gui_enable)"/>
+	</include>
+
+	<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg controller_config)"/>
+	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+		args="state_controller diff_controller">
+	</node>
+<!-- 
+	<node name="ekf_localization_odom" pkg="robot_localization" type="ekf_localization_node" respawn="true">
+		<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg odometry_config)"/>
+		<remap from="odometry/filtered" to="/diff_controller/odom_filtered" />
+	</node>
+
+	<group ns="drive">
+		<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg drive_config)"/>
+		<group ns="right">
+			<node name="rostopic_node" pkg="rostopic" type="rostopic" args="pub -r 10 /drive/right/ready std_msgs/Bool 'data: true'" output="screen">
+			</node>
+		</group>
+		<group ns="left">
+			<node name="rostopic_node" pkg="rostopic" type="rostopic" args="pub -r 10 /drive/left/ready std_msgs/Bool 'data: true'" output="screen">
+			</node>
+		</group>
+	</group>
+
+	<group ns="lidar">
+		<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg lidar_config)"/>
+		<group ns="center">
+			<node name="laser_filter" pkg="laser_filters" type="scan_to_cloud_filter_chain" output="screen">
+				<param name="target_frame" value="robosense_link"/>
+				<remap from="scan" to="scan" />
+				<remap from="cloud_filtered" to="cloud" />
+			</node>
+			<node name="obstacle_crop_box" pkg="nodelet" type="nodelet" args="standalone pcl/CropBox">
+				<remap from="~input" to="cloud" />
+				<remap from="~output" to="obstacle_crop_box" />
+			</node>
+			<node name="obstacle_voxel_grid" pkg="nodelet" type="nodelet" args="standalone pcl/VoxelGrid">
+				<remap from="~input" to="obstacle_crop_box" />
+				<remap from="~output" to="obstacle_cloud_filtered" />
+			</node>
+
+			<node name="slam_crop_box" pkg="nodelet" type="nodelet" args="standalone pcl/CropBox">
+				<remap from="~input" to="cloud" />
+				<remap from="~output" to="slam_crop_box" />
+			</node>
+			<node name="slam_voxel_grid" pkg="nodelet" type="nodelet" args="standalone pcl/VoxelGrid">
+				<remap from="~input" to="slam_crop_box" />
+				<remap from="~output" to="slam_cloud_filtered" />
+			</node>
+		</group>
+	</group>
+
+	<group ns="imu">
+		<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg imu_config)"/>
+		<group ns="center">
+			<node name="imu_transformer_node" pkg="imu_transformer" type="imu_transformer_node" output="screen">
+				<remap from="imu_in/data" to="safe"/>
+				<remap from="imu_out/data" to="oriented"/>
+			</node>
+		</group>
+	</group>
+
+	<group ns="utility">
+		<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg utility_config)"/>
+		<group ns="sound">
+			<node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" respawn="true" output="screen">
+			</node>
+		</group>
+	</group>
+
+	<group ns="safety">
+		<rosparam command="load" file="$(find pangolin_gmi_gazebo)/cfg/$(arg safety_config)"/>
+		<node name="safety_costmap_node" pkg="safety_costmap" type="safety_costmap_node" output="screen">
+			<remap from="cloud0" to="/lidar/center/obstacle_cloud_filtered"/>
+			<remap from="cmd_vel_in" to="/cmd_vel_out"/>
+			<remap from="cmd_vel" to="/diff_controller/cmd_vel"/>
+			<remap from="enable" to="costmap/enable"/>
+		</node>
+
+		<node name="safety_hardware_node" pkg="safety_hardware" type="safety_hardware_node" output="screen">
+			<remap from="device0" to="/imu/center/data"/>
+			<remap from="device1" to="/diff_controller/odom"/>
+			<remap from="device2" to="/lidar/center/obstacle_cloud_filtered"/>
+			<remap from="device3" to="/lidar/center/slam_cloud_filtered"/>
+			
+			<remap from="error0" to="error/imu/center/data"/>
+			<remap from="error1" to="error/diff_controller/odom"/>
+			<remap from="error2" to="error/lidar/center/obstacle_cloud_filtered"/>
+			<remap from="error3" to="error/lidar/center/slam_cloud_filtered"/>
+
+			<remap from="error" to="/error_stop"/>
+		</node>
+
+		<node name="safety_sensor_node" pkg="safety_sensor" type="safety_sensor_node" output="screen">
+			<param name="imuTimeout" value="0.1"/>
+			<param name="odomTimeout" value="0.1"/>
+			<remap from="imuInput" to="/imu/center/data"/>
+			<remap from="imuOutput" to="/imu/center/safe"/>
+			<remap from="odomInput" to="/diff_controller/odom"/>
+			<remap from="odomOutput" to="/diff_controller/odom_safe"/>
+		</node>
+
+		<node name="error_manager_node" pkg="error_manager" type="error_manager_node" output="screen">
+		</node>
+	</group>
+
+	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+	</include> -->
+
+</launch>

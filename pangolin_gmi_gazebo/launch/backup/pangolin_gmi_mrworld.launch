@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<arg name="world_name" default="mrworld_adr_obstacle.world"/>
+	<arg name="paused" default="false"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find pangolin_gmi_gazebo)/worlds/$(arg world_name)"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="debug" value="$(arg debug)"/>
+		<!-- <arg name="use_clock_frequency" value="true"/> -->
+		<!-- <arg name="pub_clock_frequency" value="50"/> -->
+	</include>
+
+	<include file="$(find pangolin_gmi_gazebo)/launch/pangolin_gmi_spawn.launch">
+		<arg name="joy_config" value="joy.yaml"/>
+		<arg name="teleop_twist_config" value="teleop_twist.yaml"/>
+		<arg name="twist_mux_config" value="twist_mux.yaml"/>
+		<arg name="controller_config" value="controller.yaml"/>
+		<arg name="x" value="0.0"/>
+		<arg name="y" value="0.0"/>
+		<arg name="z" value="0.0"/>
+		<arg name="yaw" value="0.0"/>
+	</include>
+
+</launch>
